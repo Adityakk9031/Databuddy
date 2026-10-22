@@ -90,6 +90,39 @@ export function sanitizePageUrl(value: string): string {
 	}
 }
 
+/**
+ * Matches a pathname against a skip pattern segment by segment: `*` stays within
+ * one segment, `**` matches the rest of the path, and a pattern ending in a
+ * wildcard segment also covers the paths below it.
+ */
+export function matchesSkipPattern(pathname: string, pattern: string): boolean {
+	if (pattern === pathname) {
+		return true;
+	}
+	if (!pattern.includes("*")) {
+		return false;
+	}
+	const patternSegments = pattern.split("/");
+	const pathSegments = pathname.split("/");
+	for (const [i, patternSegment] of patternSegments.entries()) {
+		if (patternSegment === "**") {
+			return true;
+		}
+		const pathSegment = pathSegments[i];
+		if (pathSegment === undefined) {
+			return false;
+		}
+		const matches = patternSegment.includes("*")
+			? segmentMatches(patternSegment, pathSegment)
+			: patternSegment === pathSegment;
+		if (!matches) {
+			return false;
+		}
+	}
+	const last = patternSegments.at(-1) ?? "";
+	return last.includes("*") || pathSegments.length === patternSegments.length;
+}
+
 function applyMaskPattern(pathname: string, pattern: string): string | null {
 	const normalized =
 		pattern.length > 1 && pattern.endsWith("/")

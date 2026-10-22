@@ -19,6 +19,7 @@ import {
 	isOptedOut,
 	logger,
 	maskPathname,
+	matchesSkipPattern,
 	sanitizePageUrl,
 } from "./utils";
 
@@ -413,14 +414,7 @@ export class BaseTracker {
 		if (this.options.skipPatterns) {
 			const pathname = window.location.pathname;
 			for (const pattern of this.options.skipPatterns) {
-				if (pattern === pathname) {
-					return true;
-				}
-				const starIndex = pattern.indexOf("*");
-				if (
-					starIndex !== -1 &&
-					pathname.startsWith(pattern.slice(0, starIndex))
-				) {
+				if (matchesSkipPattern(pathname, pattern)) {
 					return true;
 				}
 			}

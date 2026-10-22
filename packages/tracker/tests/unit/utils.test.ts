@@ -4,6 +4,7 @@ import {
 	buildPagePath,
 	getTrackerConfig,
 	isOptedOut,
+	matchesSkipPattern,
 	sanitizePageUrl,
 } from "../../src/core/utils";
 
@@ -225,5 +226,28 @@ describe("getTrackerConfig", () => {
 		expect(config.ignoreBotDetection).toBe("");
 		expect(config.batchSize).toBe(10);
 		expect(config.disabled).toBe(false);
+	});
+});
+
+describe("matchesSkipPattern", () => {
+	test.each([
+		["/admin", "/admin"],
+		["/admin/**", "/admin/users/1"],
+		["/private/*", "/private/notes"],
+		["/users/*/settings", "/users/42/settings"],
+		["/*/checkout", "/shop/checkout"],
+		["/blog/post-*", "/blog/post-1"],
+	])("%s skips %s", (pattern, pathname) => {
+		expect(matchesSkipPattern(pathname, pattern)).toBe(true);
+	});
+
+	test.each([
+		["/users/*/settings", "/users/42/profile"],
+		["/users/*/settings", "/users/42"],
+		["/*/checkout", "/shop/cart"],
+		["/blog/post-*", "/blog/other"],
+		["/admin", "/admin/users"],
+	])("%s keeps tracking %s", (pattern, pathname) => {
+		expect(matchesSkipPattern(pathname, pattern)).toBe(false);
 	});
 });
