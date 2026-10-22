@@ -3,6 +3,7 @@ import { Databuddy } from "../../src/index";
 import {
 	buildPagePath,
 	getTrackerConfig,
+	isLocalhost,
 	isOptedOut,
 	sanitizePageUrl,
 } from "../../src/core/utils";
@@ -225,5 +226,23 @@ describe("getTrackerConfig", () => {
 		expect(config.ignoreBotDetection).toBe("");
 		expect(config.batchSize).toBe(10);
 		expect(config.disabled).toBe(false);
+	});
+});
+
+describe("isLocalhost", () => {
+	test.each([
+		["localhost", true],
+		["127.0.0.1", true],
+		["[::1]", true],
+		["app.localhost", true],
+		["printer.local", true],
+		["example.com", false],
+		["localhost.example.com", false],
+	])("%s -> %p", (hostname, expected) => {
+		Object.defineProperty(globalThis, "window", {
+			configurable: true,
+			value: { location: { hostname } },
+		});
+		expect(isLocalhost()).toBe(expected);
 	});
 });
